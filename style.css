@@ -3,11 +3,11 @@ body {
     font-family: Arial, sans-serif;
     background-color: #f4f4f9;
     margin: 0;
-    padding: 0;
+    padding: 20px;
     display: flex;
     justify-content: center;
-    align-items: center;
-    height: 100vh;
+    align-items: flex-start;
+    min-height: 100vh;
 }
 
 /* Стилі для контейнера входу */
@@ -18,9 +18,10 @@ body {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     width: 300px;
     text-align: center;
+    margin-top: 100px;
 }
 
-h2 {
+.login-container h2 {
     margin-bottom: 20px;
     color: #333;
 }
@@ -37,7 +38,8 @@ label {
 }
 
 input[type="text"],
-input[type="password"] {
+input[type="password"],
+input[type="number"] {
     width: 100%;
     padding: 10px;
     border: 1px solid #ccc;
@@ -46,8 +48,7 @@ input[type="password"] {
 }
 
 button {
-    width: 100%;
-    padding: 10px;
+    padding: 10px 15px;
     background-color: #007BFF;
     color: white;
     border: none;
@@ -68,17 +69,17 @@ button:hover {
 
 /* Стилі для контейнера журналу */
 .journal-container {
-    width: 80%;
-    max-width: 1000px;
+    width: 90%;
+    max-width: 1200px;
     background-color: #fff;
-    padding: 20px;
+    padding: 25px;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
 header {
     border-bottom: 2px solid #eee;
-    padding-bottom: 10px;
+    padding-bottom: 15px;
     margin-bottom: 20px;
 }
 
@@ -86,6 +87,36 @@ header h1 {
     margin: 0;
 }
 
+/* Нові стилі для елементів керування */
+.controls-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.add-form {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.add-form input {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.search-input {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    min-width: 250px;
+}
+
+/* Стилі таблиці */
 table {
     width: 100%;
     border-collapse: collapse;
@@ -102,6 +133,25 @@ thead {
     color: white;
 }
 
+th[data-sort] {
+    cursor: pointer;
+    user-select: none;
+}
+
+th[data-sort]:hover {
+    background-color: #0056b3;
+}
+
 tbody tr:nth-child(even) {
     background-color: #f2f2f2;
+}
+
+.delete-btn {
+    background-color: #dc3545;
+    padding: 5px 10px;
+    font-size: 14px;
+}
+
+.delete-btn:hover {
+    background-color: #c82333;
 }
