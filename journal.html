@@ -1,4 +1,5 @@
-<html>
+<!DOCTYPE html>
+<html lang="uk">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,100 +18,230 @@
                 <form id="addStudentForm" class="add-form">
                     <input type="text" id="studentName" placeholder="Ім'я студента" required>
                     <input type="text" id="subject" placeholder="Предмет" required>
-                    <input type="number" id="grade" placeholder="Оцінка" min="1" max="12" required>
+                    <input type="number" id="grade" placeholder="Поточна оцінка" min="1" max="12" required>
                     <button type="submit">Додати запис</button>
                 </form>
                 <input type="text" id="searchInput" class="search-input" placeholder="Пошук за іменем...">
             </div>
 
-            <h2>Оцінки студентів</h2>
+            <div class="stats-container">
+                <strong>Середня поточна оцінка:</strong> <span id="averageGrade">N/A</span>
+            </div>
+
             <table>
                 <thead>
                     <tr>
                         <th data-sort="name">Ім'я студента ▾</th>
                         <th data-sort="subject">Предмет ▾</th>
-                        <th data-sort="grade">Оцінка ▾</th>
-                        <th>Дата</th>
+                        <th data-sort="grade">Поточна ▾</th>
+                        <th>Семестрова</th>
+                        <th>Річна</th>
                         <th>Дії</th>
                     </tr>
                 </thead>
                 <tbody id="journalBody">
                     </tbody>
             </table>
+            <button id="clearAllBtn">Очистити все</button>
         </main>
     </div>
 
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2>Редагувати запис</h2>
+            <form id="editForm">
+                <input type="hidden" id="editStudentId">
+                <div class="input-group">
+                    <label for="editStudentName">Ім'я студента</label>
+                    <input type="text" id="editStudentName" required>
+                </div>
+                <div class="input-group">
+                    <label for="editSubject">Предмет</label>
+                    <input type="text" id="editSubject" required>
+                </div>
+                <div class="input-group">
+                    <label for="editGrade">Поточна оцінка</label>
+                    <input type="number" id="editGrade" min="1" max="12" required>
+                </div>
+                <button type="submit">Зберегти зміни</button>
+            </form>
+        </div>
+    </div>
+    
+    <footer>
+        <p>Copyright 2017-2025(c), MaxNT Official. Всі права захищені!</p>
+    </footer>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // Елементи DOM
             const form = document.getElementById('addStudentForm');
             const tableBody = document.getElementById('journalBody');
             const searchInput = document.getElementById('searchInput');
             const tableHeaders = document.querySelectorAll('th[data-sort]');
+            const clearAllBtn = document.getElementById('clearAllBtn');
+            const averageGradeEl = document.getElementById('averageGrade');
+            // Модальне вікно
+            const modal = document.getElementById('editModal');
+            const closeBtn = document.querySelector('.close-btn');
+            const editForm = document.getElementById('editForm');
 
-            // Завантажуємо дані з localStorage або використовуємо початкові
-            let students = JSON.parse(localStorage.getItem('journalData')) || [
-                { id: 1, name: 'Петренко Петро', subject: 'Математика', grade: 10, date: '2025-10-06' },
-                { id: 2, name: 'Іваненко Іван', subject: 'Фізика', grade: 8, date: '2025-10-05' },
-                { id: 3, name: 'Сидоренко Марія', subject: 'Історія', grade: 12, date: '2025-10-06' },
-                { id: 4, name: 'Коваленко Ганна', subject: 'Хімія', grade: 9, date: '2025-10-04' }
-            ];
+            // Завантаження даних з localStorage або початковий масив
+            let students = JSON.parse(localStorage.getItem('journalData')) || [];
 
             let sortDirection = { name: 'asc', subject: 'asc', grade: 'asc' };
 
-            // Функція для збереження даних у localStorage
+            // Збереження даних
             const saveData = () => {
                 localStorage.setItem('journalData', JSON.stringify(students));
             };
+            
+            // Розрахунок та відображення статистики
+            const calculateStats = () => {
+                if (students.length === 0) {
+                    averageGradeEl.textContent = 'N/A';
+                    return;
+                }
+                const totalGrade = students.reduce((sum, student) => sum + student.grade, 0);
+                const average = (totalGrade / students.length).toFixed(2);
+                averageGradeEl.textContent = average;
+            };
 
-            // Функція для відображення даних у таблиці
+            // Відображення таблиці
             const renderTable = (data) => {
                 tableBody.innerHTML = '';
+                if (data.length === 0) {
+                     tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Жодного запису не знайдено.</td></tr>';
+                }
                 data.forEach(student => {
                     const row = document.createElement('tr');
+                    
+                    // Семестрова оцінка
+                    let semesterGradeHTML = student.semesterGrade 
+                        ? `${student.semesterGrade} <button class="remove-grade-btn" data-id="${student.id}" data-type="semester">Видалити</button>`
+                        : `<button class="set-grade-btn" data-id="${student.id}" data-type="semester">Поставити</button>`;
+                    
+                    // Річна оцінка
+                    let annualGradeHTML = student.annualGrade 
+                        ? `${student.annualGrade} <button class="remove-grade-btn" data-id="${student.id}" data-type="annual">Видалити</button>`
+                        : `<button class="set-grade-btn" data-id="${student.id}" data-type="annual">Поставити</button>`;
+
                     row.innerHTML = `
                         <td>${student.name}</td>
                         <td>${student.subject}</td>
                         <td>${student.grade}</td>
-                        <td>${student.date}</td>
-                        <td><button class="delete-btn" data-id="${student.id}">Видалити</button></td>
+                        <td class="grade-actions">${semesterGradeHTML}</td>
+                        <td class="grade-actions">${annualGradeHTML}</td>
+                        <td class="action-buttons">
+                            <button class="edit-btn" data-id="${student.id}">Редагувати</button>
+                            <button class="delete-btn" data-id="${student.id}">Видалити</button>
+                        </td>
                     `;
                     tableBody.appendChild(row);
                 });
+                calculateStats();
             };
+            
+            // --- Логіка модального вікна ---
+            const openModal = (student) => {
+                document.getElementById('editStudentId').value = student.id;
+                document.getElementById('editStudentName').value = student.name;
+                document.getElementById('editSubject').value = student.subject;
+                document.getElementById('editGrade').value = student.grade;
+                modal.style.display = 'block';
+            };
+            const closeModal = () => {
+                modal.style.display = 'none';
+            };
+            closeBtn.onclick = closeModal;
+            window.onclick = (event) => {
+                if (event.target == modal) closeModal();
+            };
+            
+            editForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const studentId = parseInt(document.getElementById('editStudentId').value);
+                students = students.map(s => {
+                    if (s.id === studentId) {
+                        s.name = document.getElementById('editStudentName').value;
+                        s.subject = document.getElementById('editSubject').value;
+                        s.grade = parseInt(document.getElementById('editGrade').value);
+                    }
+                    return s;
+                });
+                saveData();
+                renderTable(students);
+                closeModal();
+            });
 
-            // Додавання нового студента
+
+            // --- Обробники подій ---
+
+            // Додавання
             form.addEventListener('submit', (e) => {
                 e.preventDefault();
-                const newStudent = {
-                    id: Date.now(), // Унікальний ID на основі часу
+                students.push({
+                    id: Date.now(),
                     name: document.getElementById('studentName').value,
                     subject: document.getElementById('subject').value,
                     grade: parseInt(document.getElementById('grade').value),
-                    date: new Date().toISOString().slice(0, 10) // Сьогоднішня дата
-                };
-                students.push(newStudent);
+                    semesterGrade: null,
+                    annualGrade: null
+                });
                 form.reset();
                 saveData();
                 renderTable(students);
             });
 
-            // Видалення студента
+            // Кліки в таблиці (делегування подій)
             tableBody.addEventListener('click', (e) => {
+                const id = parseInt(e.target.dataset.id);
+                const type = e.target.dataset.type;
+
+                // Видалення запису
                 if (e.target.classList.contains('delete-btn')) {
-                    const studentId = parseInt(e.target.dataset.id);
-                    students = students.filter(student => student.id !== studentId);
+                    if (confirm('Ви впевнені, що хочете видалити цей запис?')) {
+                        students = students.filter(s => s.id !== id);
+                        saveData();
+                        renderTable(students);
+                    }
+                }
+                // Редагування запису
+                if (e.target.classList.contains('edit-btn')) {
+                    const studentToEdit = students.find(s => s.id === id);
+                    openModal(studentToEdit);
+                }
+                // Поставити оцінку (семестрову/річну)
+                if (e.target.classList.contains('set-grade-btn')) {
+                    const grade = prompt(`Введіть ${type === 'semester' ? 'семестрову' : 'річну'} оцінку (1-12):`);
+                    const parsedGrade = parseInt(grade);
+                    if (parsedGrade >= 1 && parsedGrade <= 12) {
+                        students = students.map(s => {
+                            if (s.id === id) s[type === 'semester' ? 'semesterGrade' : 'annualGrade'] = parsedGrade;
+                            return s;
+                        });
+                        saveData();
+                        renderTable(students);
+                    } else if (grade !== null) {
+                        alert('Будь ласка, введіть число від 1 до 12.');
+                    }
+                }
+                // Видалити оцінку (семестрову/річну)
+                if (e.target.classList.contains('remove-grade-btn')) {
+                     students = students.map(s => {
+                        if (s.id === id) s[type === 'semester' ? 'semesterGrade' : 'annualGrade'] = null;
+                        return s;
+                    });
                     saveData();
                     renderTable(students);
                 }
             });
 
-            // Пошук (фільтрація)
+            // Пошук
             searchInput.addEventListener('input', (e) => {
                 const searchTerm = e.target.value.toLowerCase();
-                const filteredStudents = students.filter(student =>
-                    student.name.toLowerCase().includes(searchTerm)
-                );
-                renderTable(filteredStudents);
+                renderTable(students.filter(s => s.name.toLowerCase().includes(searchTerm)));
             });
 
             // Сортування
@@ -119,18 +250,25 @@
                     const sortKey = header.dataset.sort;
                     const direction = sortDirection[sortKey] === 'asc' ? 'desc' : 'asc';
                     sortDirection[sortKey] = direction;
-
                     students.sort((a, b) => {
                         if (a[sortKey] < b[sortKey]) return direction === 'asc' ? -1 : 1;
                         if (a[sortKey] > b[sortKey]) return direction === 'asc' ? 1 : -1;
                         return 0;
                     });
-
                     renderTable(students);
                 });
             });
+            
+            // Очищення всіх даних
+            clearAllBtn.addEventListener('click', () => {
+                if (confirm('УВАГА! Ви впевнені, що хочете видалити ВСІ дані з журналу? Цю дію неможливо буде скасувати.')) {
+                    students = [];
+                    saveData();
+                    renderTable(students);
+                }
+            });
 
-            // Перше відображення таблиці
+            // Початкове відображення
             renderTable(students);
         });
     </script>
