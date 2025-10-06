@@ -9,48 +9,130 @@
     <div class="journal-container">
         <header>
             <h1>Електронний журнал</h1>
-            <p>Вітаємо, **adminmtlv126**!</p>
+            <p>Вітаємо, <strong>adminmtlv126</strong>!</p>
         </header>
-        
+
         <main>
+            <div class="controls-container">
+                <form id="addStudentForm" class="add-form">
+                    <input type="text" id="studentName" placeholder="Ім'я студента" required>
+                    <input type="text" id="subject" placeholder="Предмет" required>
+                    <input type="number" id="grade" placeholder="Оцінка" min="1" max="12" required>
+                    <button type="submit">Додати запис</button>
+                </form>
+                <input type="text" id="searchInput" class="search-input" placeholder="Пошук за іменем...">
+            </div>
+
             <h2>Оцінки студентів</h2>
             <table>
                 <thead>
                     <tr>
-                        <th>Ім'я студента</th>
-                        <th>Предмет</th>
-                        <th>Оцінка</th>
+                        <th data-sort="name">Ім'я студента ▾</th>
+                        <th data-sort="subject">Предмет ▾</th>
+                        <th data-sort="grade">Оцінка ▾</th>
                         <th>Дата</th>
+                        <th>Дії</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td>Петренко Петро</td>
-                        <td>Математика</td>
-                        <td>10</td>
-                        <td>2025-10-06</td>
-                    </tr>
-                    <tr>
-                        <td>Іваненко Іван</td>
-                        <td>Алгоритмізація та основи програмування</td>
-                        <td>8</td>
-                        <td>2025-10-05</td>
-                    </tr>
-                    <tr>
-                        <td>Сидоренко Марія</td>
-                        <td>Схемотехніка</td>
-                        <td>12</td>
-                        <td>2025-10-06</td>
-                    </tr>
-                     <tr>
-                        <td>Коваленко Ганна</td>
-                        <td>Комп'ютерні мережі</td>
-                        <td>9</td>
-                        <td>2025-10-04</td>
-                    </tr>
-                </tbody>
+                <tbody id="journalBody">
+                    </tbody>
             </table>
         </main>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('addStudentForm');
+            const tableBody = document.getElementById('journalBody');
+            const searchInput = document.getElementById('searchInput');
+            const tableHeaders = document.querySelectorAll('th[data-sort]');
+
+            // Завантажуємо дані з localStorage або використовуємо початкові
+            let students = JSON.parse(localStorage.getItem('journalData')) || [
+                { id: 1, name: 'Петренко Петро', subject: 'Математика', grade: 10, date: '2025-10-06' },
+                { id: 2, name: 'Іваненко Іван', subject: 'Фізика', grade: 8, date: '2025-10-05' },
+                { id: 3, name: 'Сидоренко Марія', subject: 'Історія', grade: 12, date: '2025-10-06' },
+                { id: 4, name: 'Коваленко Ганна', subject: 'Хімія', grade: 9, date: '2025-10-04' }
+            ];
+
+            let sortDirection = { name: 'asc', subject: 'asc', grade: 'asc' };
+
+            // Функція для збереження даних у localStorage
+            const saveData = () => {
+                localStorage.setItem('journalData', JSON.stringify(students));
+            };
+
+            // Функція для відображення даних у таблиці
+            const renderTable = (data) => {
+                tableBody.innerHTML = '';
+                data.forEach(student => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${student.name}</td>
+                        <td>${student.subject}</td>
+                        <td>${student.grade}</td>
+                        <td>${student.date}</td>
+                        <td><button class="delete-btn" data-id="${student.id}">Видалити</button></td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            };
+
+            // Додавання нового студента
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const newStudent = {
+                    id: Date.now(), // Унікальний ID на основі часу
+                    name: document.getElementById('studentName').value,
+                    subject: document.getElementById('subject').value,
+                    grade: parseInt(document.getElementById('grade').value),
+                    date: new Date().toISOString().slice(0, 10) // Сьогоднішня дата
+                };
+                students.push(newStudent);
+                form.reset();
+                saveData();
+                renderTable(students);
+            });
+
+            // Видалення студента
+            tableBody.addEventListener('click', (e) => {
+                if (e.target.classList.contains('delete-btn')) {
+                    const studentId = parseInt(e.target.dataset.id);
+                    students = students.filter(student => student.id !== studentId);
+                    saveData();
+                    renderTable(students);
+                }
+            });
+
+            // Пошук (фільтрація)
+            searchInput.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                const filteredStudents = students.filter(student =>
+                    student.name.toLowerCase().includes(searchTerm)
+                );
+                renderTable(filteredStudents);
+            });
+
+            // Сортування
+            tableHeaders.forEach(header => {
+                header.addEventListener('click', () => {
+                    const sortKey = header.dataset.sort;
+                    const direction = sortDirection[sortKey] === 'asc' ? 'desc' : 'asc';
+                    sortDirection[sortKey] = direction;
+
+                    students.sort((a, b) => {
+                        if (a[sortKey] < b[sortKey]) return direction === 'asc' ? -1 : 1;
+                        if (a[sortKey] > b[sortKey]) return direction === 'asc' ? 1 : -1;
+                        return 0;
+                    });
+
+                    renderTable(students);
+                });
+            });
+
+            // Перше відображення таблиці
+            renderTable(students);
+        });
+    </script>
 </body>
 </html>
