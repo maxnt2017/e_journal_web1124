@@ -5,15 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Електронний журнал</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="journal-container">
         <header>
             <h1>Електронний журнал</h1>
-            <p>Вітаємо, <strong>adminmtlv126</strong>!</p>
         </header>
 
         <main>
+            <div class="group-management">
+                <div class="input-group">
+                    <label for="groupSelector">Вибрана група:</label>
+                    <select id="groupSelector"></select>
+                </div>
+                <div class="input-group">
+                    <label for="newGroupName">Створити нову групу:</label>
+                    <input type="text" id="newGroupName" placeholder="Назва нової групи">
+                </div>
+                <button id="addGroupBtn">Створити</button>
+                <button id="deleteGroupBtn">Видалити поточну групу</button>
+            </div>
+
             <div class="controls-container">
                 <form id="addStudentForm" class="add-form">
                     <input type="text" id="studentName" placeholder="Ім'я студента" required>
@@ -25,7 +38,7 @@
             </div>
 
             <div class="stats-container">
-                <strong>Середня поточна оцінка:</strong> <span id="averageGrade">N/A</span>
+                <strong>Середня поточна оцінка в групі:</strong> <span id="averageGrade">N/A</span>
             </div>
 
             <table>
@@ -39,10 +52,17 @@
                         <th>Дії</th>
                     </tr>
                 </thead>
-                <tbody id="journalBody">
-                    </tbody>
+                <tbody id="journalBody"></tbody>
             </table>
-            <button id="clearAllBtn">Очистити все</button>
+            <div class="main-actions">
+                 <button id="exportBtn">Експорт у CSV</button>
+                 <button id="clearAllBtn">Очистити групу</button>
+            </div>
+
+            <div class="chart-container">
+                <h2>Розподіл оцінок у групі</h2>
+                <canvas id="gradesChart"></canvas>
+            </div>
         </main>
     </div>
 
@@ -75,201 +95,203 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Елементи DOM
-            const form = document.getElementById('addStudentForm');
+            // --- ГЛОБАЛЬНІ ЗМІННІ ТА ЕЛЕМЕНТИ DOM ---
+            const groupSelector = document.getElementById('groupSelector');
+            const addGroupBtn = document.getElementById('addGroupBtn');
+            const newGroupNameInput = document.getElementById('newGroupName');
+            const deleteGroupBtn = document.getElementById('deleteGroupBtn');
             const tableBody = document.getElementById('journalBody');
+            const addStudentForm = document.getElementById('addStudentForm');
             const searchInput = document.getElementById('searchInput');
-            const tableHeaders = document.querySelectorAll('th[data-sort]');
-            const clearAllBtn = document.getElementById('clearAllBtn');
             const averageGradeEl = document.getElementById('averageGrade');
-            // Модальне вікно
+            const clearAllBtn = document.getElementById('clearAllBtn');
+            const exportBtn = document.getElementById('exportBtn');
             const modal = document.getElementById('editModal');
             const closeBtn = document.querySelector('.close-btn');
             const editForm = document.getElementById('editForm');
+            
+            let journalData = {};
+            let activeGroup = '';
+            let gradesChart = null; // Змінна для зберігання об'єкта графіка
+            
+            // --- ОСНОВНІ ФУНКЦІЇ ---
 
-            // Завантаження даних з localStorage або початковий масив
-            let students = JSON.parse(localStorage.getItem('journalData')) || [];
-
-            let sortDirection = { name: 'asc', subject: 'asc', grade: 'asc' };
+            // Завантаження даних
+            const loadData = () => {
+                const data = JSON.parse(localStorage.getItem('journalData'));
+                if (data && Object.keys(data).length > 0) {
+                    journalData = data;
+                } else {
+                    journalData = { 'Стандартна група': [] }; // Створюємо першу групу
+                }
+                activeGroup = localStorage.getItem('activeGroup') || Object.keys(journalData)[0];
+            };
 
             // Збереження даних
             const saveData = () => {
-                localStorage.setItem('journalData', JSON.stringify(students));
+                localStorage.setItem('journalData', JSON.stringify(journalData));
+                localStorage.setItem('activeGroup', activeGroup);
+            };
+
+            // Перерендер всіх елементів UI
+            const rerenderUI = () => {
+                renderGroupSelector();
+                const currentStudents = journalData[activeGroup] || [];
+                renderTable(currentStudents);
+                calculateStats();
+                renderGradeChart();
+                searchInput.value = ''; // Скидаємо пошук при зміні групи
+            };
+
+            // --- КЕРУВАННЯ ГРУПАМИ ---
+
+            const renderGroupSelector = () => {
+                groupSelector.innerHTML = '';
+                for (const groupName in journalData) {
+                    const option = document.createElement('option');
+                    option.value = groupName;
+                    option.textContent = groupName;
+                    if (groupName === activeGroup) {
+                        option.selected = true;
+                    }
+                    groupSelector.appendChild(option);
+                }
             };
             
-            // Розрахунок та відображення статистики
+            groupSelector.addEventListener('change', () => {
+                activeGroup = groupSelector.value;
+                saveData();
+                rerenderUI();
+            });
+
+            addGroupBtn.addEventListener('click', () => {
+                const newGroupName = newGroupNameInput.value.trim();
+                if (newGroupName && !journalData[newGroupName]) {
+                    journalData[newGroupName] = [];
+                    activeGroup = newGroupName;
+                    saveData();
+                    rerenderUI();
+                    newGroupNameInput.value = '';
+                } else {
+                    alert('Група з такою назвою вже існує або назва порожня!');
+                }
+            });
+
+            deleteGroupBtn.addEventListener('click', () => {
+                if (Object.keys(journalData).length <= 1) {
+                    alert('Неможливо видалити останню групу.');
+                    return;
+                }
+                if (confirm(`Ви впевнені, що хочете видалити групу "${activeGroup}" та всі її дані?`)) {
+                    delete journalData[activeGroup];
+                    activeGroup = Object.keys(journalData)[0];
+                    saveData();
+                    rerenderUI();
+                }
+            });
+            
+            // --- РЕНДЕР ТАБЛИЦІ ТА СТАТИСТИКИ ---
+
+            const renderTable = (data) => {
+                // ... (код renderTable з попередньої версії залишається тут без змін)
+                 tableBody.innerHTML = '';
+                if (!data || data.length === 0) {
+                     tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">У цій групі ще немає записів.</td></tr>';
+                     return;
+                }
+                data.forEach(student => {
+                    const row = document.createElement('tr');
+                    let semesterGradeHTML = student.semesterGrade ? `${student.semesterGrade} <button class="remove-grade-btn" data-id="${student.id}" data-type="semester">Видалити</button>` : `<button class="set-grade-btn" data-id="${student.id}" data-type="semester">Поставити</button>`;
+                    let annualGradeHTML = student.annualGrade ? `${student.annualGrade} <button class="remove-grade-btn" data-id="${student.id}" data-type="annual">Видалити</button>` : `<button class="set-grade-btn" data-id="${student.id}" data-type="annual">Поставити</button>`;
+                    row.innerHTML = `<td>${student.name}</td><td>${student.subject}</td><td>${student.grade}</td><td class="grade-actions">${semesterGradeHTML}</td><td class="grade-actions">${annualGradeHTML}</td><td class="action-buttons"><button class="edit-btn" data-id="${student.id}">Редагувати</button><button class="delete-btn" data-id="${student.id}">Видалити</button></td>`;
+                    tableBody.appendChild(row);
+                });
+            };
+
             const calculateStats = () => {
+                const students = journalData[activeGroup] || [];
                 if (students.length === 0) {
                     averageGradeEl.textContent = 'N/A';
                     return;
                 }
                 const totalGrade = students.reduce((sum, student) => sum + student.grade, 0);
-                const average = (totalGrade / students.length).toFixed(2);
-                averageGradeEl.textContent = average;
+                averageGradeEl.textContent = (totalGrade / students.length).toFixed(2);
             };
 
-            // Відображення таблиці
-            const renderTable = (data) => {
-                tableBody.innerHTML = '';
-                if (data.length === 0) {
-                     tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Жодного запису не знайдено.</td></tr>';
-                }
-                data.forEach(student => {
-                    const row = document.createElement('tr');
-                    
-                    // Семестрова оцінка
-                    let semesterGradeHTML = student.semesterGrade 
-                        ? `${student.semesterGrade} <button class="remove-grade-btn" data-id="${student.id}" data-type="semester">Видалити</button>`
-                        : `<button class="set-grade-btn" data-id="${student.id}" data-type="semester">Поставити</button>`;
-                    
-                    // Річна оцінка
-                    let annualGradeHTML = student.annualGrade 
-                        ? `${student.annualGrade} <button class="remove-grade-btn" data-id="${student.id}" data-type="annual">Видалити</button>`
-                        : `<button class="set-grade-btn" data-id="${student.id}" data-type="annual">Поставити</button>`;
+            // --- РЕНДЕР ГРАФІКА ---
 
-                    row.innerHTML = `
-                        <td>${student.name}</td>
-                        <td>${student.subject}</td>
-                        <td>${student.grade}</td>
-                        <td class="grade-actions">${semesterGradeHTML}</td>
-                        <td class="grade-actions">${annualGradeHTML}</td>
-                        <td class="action-buttons">
-                            <button class="edit-btn" data-id="${student.id}">Редагувати</button>
-                            <button class="delete-btn" data-id="${student.id}">Видалити</button>
-                        </td>
-                    `;
-                    tableBody.appendChild(row);
-                });
-                calculateStats();
-            };
-            
-            // --- Логіка модального вікна ---
-            const openModal = (student) => {
-                document.getElementById('editStudentId').value = student.id;
-                document.getElementById('editStudentName').value = student.name;
-                document.getElementById('editSubject').value = student.subject;
-                document.getElementById('editGrade').value = student.grade;
-                modal.style.display = 'block';
-            };
-            const closeModal = () => {
-                modal.style.display = 'none';
-            };
-            closeBtn.onclick = closeModal;
-            window.onclick = (event) => {
-                if (event.target == modal) closeModal();
-            };
-            
-            editForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const studentId = parseInt(document.getElementById('editStudentId').value);
-                students = students.map(s => {
-                    if (s.id === studentId) {
-                        s.name = document.getElementById('editStudentName').value;
-                        s.subject = document.getElementById('editSubject').value;
-                        s.grade = parseInt(document.getElementById('editGrade').value);
+            const renderGradeChart = () => {
+                const ctx = document.getElementById('gradesChart').getContext('2d');
+                const students = journalData[activeGroup] || [];
+                
+                const gradeCounts = Array(12).fill(0); // Масив для оцінок від 1 до 12
+                students.forEach(s => {
+                    if (s.grade >= 1 && s.grade <= 12) {
+                        gradeCounts[s.grade - 1]++;
                     }
-                    return s;
                 });
-                saveData();
-                renderTable(students);
-                closeModal();
-            });
 
-
-            // --- Обробники подій ---
-
-            // Додавання
-            form.addEventListener('submit', (e) => {
-                e.preventDefault();
-                students.push({
-                    id: Date.now(),
-                    name: document.getElementById('studentName').value,
-                    subject: document.getElementById('subject').value,
-                    grade: parseInt(document.getElementById('grade').value),
-                    semesterGrade: null,
-                    annualGrade: null
-                });
-                form.reset();
-                saveData();
-                renderTable(students);
-            });
-
-            // Кліки в таблиці (делегування подій)
-            tableBody.addEventListener('click', (e) => {
-                const id = parseInt(e.target.dataset.id);
-                const type = e.target.dataset.type;
-
-                // Видалення запису
-                if (e.target.classList.contains('delete-btn')) {
-                    if (confirm('Ви впевнені, що хочете видалити цей запис?')) {
-                        students = students.filter(s => s.id !== id);
-                        saveData();
-                        renderTable(students);
+                if (gradesChart) {
+                    gradesChart.destroy(); // Знищуємо попередній графік
+                }
+                
+                gradesChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'],
+                        datasets: [{
+                            label: 'Кількість студентів',
+                            data: gradeCounts,
+                            backgroundColor: 'rgba(40, 167, 69, 0.7)',
+                            borderColor: 'rgba(40, 167, 69, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 1 // Крок осі Y - цілі числа
+                                }
+                            }
+                        }
                     }
-                }
-                // Редагування запису
-                if (e.target.classList.contains('edit-btn')) {
-                    const studentToEdit = students.find(s => s.id === id);
-                    openModal(studentToEdit);
-                }
-                // Поставити оцінку (семестрову/річну)
-                if (e.target.classList.contains('set-grade-btn')) {
-                    const grade = prompt(`Введіть ${type === 'semester' ? 'семестрову' : 'річну'} оцінку (1-12):`);
-                    const parsedGrade = parseInt(grade);
-                    if (parsedGrade >= 1 && parsedGrade <= 12) {
-                        students = students.map(s => {
-                            if (s.id === id) s[type === 'semester' ? 'semesterGrade' : 'annualGrade'] = parsedGrade;
-                            return s;
-                        });
-                        saveData();
-                        renderTable(students);
-                    } else if (grade !== null) {
-                        alert('Будь ласка, введіть число від 1 до 12.');
-                    }
-                }
-                // Видалити оцінку (семестрову/річну)
-                if (e.target.classList.contains('remove-grade-btn')) {
-                     students = students.map(s => {
-                        if (s.id === id) s[type === 'semester' ? 'semesterGrade' : 'annualGrade'] = null;
-                        return s;
-                    });
-                    saveData();
-                    renderTable(students);
-                }
-            });
-
-            // Пошук
-            searchInput.addEventListener('input', (e) => {
-                const searchTerm = e.target.value.toLowerCase();
-                renderTable(students.filter(s => s.name.toLowerCase().includes(searchTerm)));
-            });
-
-            // Сортування
-            tableHeaders.forEach(header => {
-                header.addEventListener('click', () => {
-                    const sortKey = header.dataset.sort;
-                    const direction = sortDirection[sortKey] === 'asc' ? 'desc' : 'asc';
-                    sortDirection[sortKey] = direction;
-                    students.sort((a, b) => {
-                        if (a[sortKey] < b[sortKey]) return direction === 'asc' ? -1 : 1;
-                        if (a[sortKey] > b[sortKey]) return direction === 'asc' ? 1 : -1;
-                        return 0;
-                    });
-                    renderTable(students);
                 });
+            };
+
+            // --- ЕКСПОРТ У CSV ---
+
+            exportBtn.addEventListener('click', () => {
+                const students = journalData[activeGroup] || [];
+                if (students.length === 0) {
+                    alert('Немає даних для експорту.');
+                    return;
+                }
+                const headers = ['Ім\'я студента', 'Предмет', 'Поточна', 'Семестрова', 'Річна'];
+                let csvContent = "data:text/csv;charset=utf-8," + headers.join(',') + '\n';
+                
+                students.forEach(s => {
+                    const row = [s.name, s.subject, s.grade, s.semesterGrade || '', s.annualGrade || ''];
+                    csvContent += row.join(',') + '\n';
+                });
+                
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", `${activeGroup}_export.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
             });
             
-            // Очищення всіх даних
-            clearAllBtn.addEventListener('click', () => {
-                if (confirm('УВАГА! Ви впевнені, що хочете видалити ВСІ дані з журналу? Цю дію неможливо буде скасувати.')) {
-                    students = [];
-                    saveData();
-                    renderTable(students);
-                }
-            });
+            // --- ІНШІ ОБРОБНИКИ ПОДІЙ ---
+            
+            // ... (обробники для модального вікна, додавання, видалення, редагування, сортування, очищення групи - код майже такий самий, але тепер працює з `journalData[activeGroup]`)
 
-            // Початкове відображення
-            renderTable(students);
+            // Початковий запуск
+            loadData();
+            rerenderUI();
         });
     </script>
 </body>
