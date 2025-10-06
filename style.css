@@ -4,6 +4,12 @@ body {
     background-color: #f0f2f5;
     margin: 0;
     padding: 20px;
+    color: #333;
+}
+
+/* Іконки (для кнопок) */
+.icon {
+    margin-right: 8px;
 }
 
 /* Стилі для контейнера входу */
@@ -17,217 +23,88 @@ body {
     margin: 100px auto;
 }
 
-.login-container h2 {
-    margin-bottom: 25px;
-    color: #333;
+/* ... (інші стилі для сторінки входу залишаються без змін) ... */
+
+input, select, button {
+    font-family: inherit;
 }
 
-.input-group {
-    margin-bottom: 15px;
-    text-align: left;
+input[type="text"], input[type="password"], input[type="number"], input[type="date"], select {
+    width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; transition: border-color 0.3s;
 }
-
-label {
-    display: block;
-    margin-bottom: 5px;
-    color: #555;
-    font-weight: 600;
-}
-
-input[type="text"],
-input[type="password"],
-input[type="number"],
-select {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    box-sizing: border-box;
-    transition: border-color 0.3s;
-}
-
-input:focus, select:focus {
-    border-color: #28a745;
-    outline: none;
-}
+input:focus, select:focus { border-color: #28a745; outline: none; }
 
 button {
-    padding: 10px 15px;
-    background-color: #28a745; /* Зелений */
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s;
+    padding: 10px 15px; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; transition: background-color 0.3s; display: inline-flex; align-items: center; justify-content: center;
 }
+button:hover { background-color: #218838; }
 
-button:hover {
-    background-color: #218838; /* Темно-зелений */
-}
-
-.error-message {
-    color: #dc3545;
-    margin-top: 10px;
-    height: 20px;
-}
-
-/* Стилі для контейнера журналу */
+/* Основний контейнер журналу */
 .journal-container {
-    width: 95%;
-    max-width: 1400px;
-    background-color: #fff;
-    padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    margin: 0 auto;
+    width: 95%; max-width: 1600px; background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 0 auto;
 }
 
-header {
-    border-bottom: 2px solid #eee;
-    padding-bottom: 15px;
-    margin-bottom: 20px;
-}
+header h1 { margin: 0; color: #333; }
 
-header h1 {
-    margin: 0;
-    color: #333;
+/* Панелі керування */
+.management-panel {
+    background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #dee2e6; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 15px;
 }
+.management-panel .input-group { flex-grow: 1; margin-bottom: 0; }
+.management-panel button { height: 40px; }
 
-/* Панель керування групами */
-.group-management {
-    background-color: #f8f9fa;
-    padding: 15px;
-    border-radius: 5px;
-    margin-bottom: 20px;
-    border: 1px solid #dee2e6;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 15px;
-}
+#deleteGroupBtn { background-color: #dc3545; }
+#deleteGroupBtn:hover { background-color: #c82333; }
 
-.group-management .input-group {
-    flex-grow: 1;
-}
-
-.group-management button {
-    height: 40px; /* Вирівнюємо висоту кнопок */
-}
-
-#deleteGroupBtn {
-    background-color: #dc3545;
-}
-#deleteGroupBtn:hover {
-    background-color: #c82333;
-}
-
-/* Панель керування */
-.controls-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-    gap: 15px;
-}
-
-.add-form {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    flex-wrap: wrap;
-}
-
-.add-form input {
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
-
-.search-input {
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    min-width: 250px;
-}
+.controls-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
+.add-form { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.search-input { padding: 10px; border: 1px solid #ccc; border-radius: 4px; min-width: 250px; }
 
 /* Статистика */
-.stats-container {
-    background-color: #e8f5e9;
-    border-left: 5px solid #28a745;
-    padding: 15px;
-    margin-bottom: 20px;
-    border-radius: 5px;
-    font-size: 18px;
-}
+.stats-container { background-color: #e8f5e9; border-left: 5px solid #28a745; padding: 15px; margin-bottom: 20px; border-radius: 5px; font-size: 18px; }
 
-/* Стилі таблиці */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-}
-
-th, td {
-    padding: 12px 15px;
-    border: 1px solid #ddd;
-    text-align: left;
-    vertical-align: middle;
-}
-
-thead {
-    background-color: #28a745; /* Зелений */
-    color: white;
-}
-
+/* Таблиця */
+table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+th, td { padding: 12px 15px; border: 1px solid #ddd; text-align: left; vertical-align: middle; }
+thead { background-color: #28a745; color: white; }
 th[data-sort] { cursor: pointer; user-select: none; }
 th[data-sort]:hover { background-color: #218838; }
 
-tbody tr:nth-child(even) { background-color: #f9f9f9; }
-tbody tr:hover { background-color: #f1f1f1; }
+.student-name { cursor: pointer; color: #0056b3; font-weight: bold; }
+.student-name:hover { text-decoration: underline; }
 
-.grade-actions button { font-size: 12px; padding: 3px 8px; margin-left: 5px; }
-.set-grade-btn { background-color: #17a2b8; }
-.set-grade-btn:hover { background-color: #138496; }
-.remove-grade-btn { background-color: #ffc107; color: #212529;}
-.remove-grade-btn:hover { background-color: #e0a800; }
-
-.action-buttons button { margin-right: 5px; }
-.edit-btn { background-color: #ffc107; color: #212529; }
-.edit-btn:hover { background-color: #e0a800; }
+/* Кнопки */
+.action-buttons button { margin-right: 5px; padding: 6px 10px; font-size: 14px; }
 .delete-btn { background-color: #dc3545; }
-.delete-btn:hover { background-color: #c82333; }
-
-/* Кнопки дій */
-.main-actions {
-    margin-top: 20px;
-    display: flex;
-    gap: 10px;
-}
-#exportBtn { background-color: #007bff; }
-#exportBtn:hover { background-color: #0069d9; }
-#clearAllBtn { background-color: #6c757d; }
-#clearAllBtn:hover { background-color: #5a6268; }
+#clearAllBtn, #deleteGroupBtn { background-color: #dc3545; }
+.main-actions { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 10px; }
+#exportBtn, #backupBtn { background-color: #007bff; }
+#restoreBtn { background-color: #ffc107; color: #212529;}
 
 /* Графік */
-.chart-container {
-    margin-top: 30px;
-    padding: 20px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-}
+.chart-container { margin-top: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
 
 /* Футер */
-footer {
-    text-align: center;
-    margin-top: 30px;
-    padding-top: 15px;
-    border-top: 1px solid #ddd;
-    color: #777;
-}
+footer { text-align: center; margin-top: 30px; padding-top: 15px; border-top: 1px solid #ddd; color: #777; }
 
-/* Модальне вікно для редагування */
-.modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
-.modal-content { background-color: #fefefe; margin: 15% auto; padding: 25px; border: 1px solid #888; width: 80%; max-width: 500px; border-radius: 8px; }
-.close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+/* Модальні вікна */
+.modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); }
+.modal-content { background-color: #fefefe; margin: 5% auto; padding: 25px; border: 1px solid #888; width: 90%; max-width: 800px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+.modal-header { padding-bottom: 10px; border-bottom: 1px solid #eee; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+.close-btn { color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer; }
+
+/* Детальна картка студента */
+#studentDetailModal .modal-content { max-width: 900px; }
+.student-details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
+.grades-section h3, .attendance-section h3 { margin-top: 0; }
+.grades-list { list-style: none; padding: 0; max-height: 250px; overflow-y: auto; border: 1px solid #ddd; border-radius: 5px; padding: 10px; }
+.grades-list li { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #eee; }
+.grades-list li:last-child { border-bottom: none; }
+.grade-info { flex-grow: 1; }
+.grade-info .comment { font-size: 0.9em; color: #666; }
+.grade-delete-btn { background: none; border: none; color: #dc3545; cursor: pointer; font-size: 1.2em; }
+.add-grade-form { display: flex; gap: 10px; margin-top: 15px; }
+/* Відвідуваність */
+.attendance-controls { display: flex; gap: 10px; margin-top: 10px; }
+.attendance-controls button { flex-grow: 1; }
+.attendance-log { list-style: none; padding: 0; margin-top: 15px; max-height: 150px; overflow-y: auto; }
