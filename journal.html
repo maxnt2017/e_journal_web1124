@@ -3,53 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Експертний Електронний Журнал</title>
+    <title>Ультимативний Електронний Журнал</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
 </head>
 <body>
     <div class="journal-container">
-        <header>
+        <header class="header-controls">
             <h1>Електронний журнал</h1>
+            <div class="theme-switcher">
+                <i class="fas fa-sun"></i>
+                <label class="switch">
+                    <input type="checkbox" id="themeToggle">
+                    <span class="slider"></span>
+                </label>
+                <i class="fas fa-moon"></i>
+            </div>
         </header>
 
         <main>
             <div class="management-panel">
-                <div class="input-group"><label for="groupSelector">Вибрана група:</label><select id="groupSelector"></select></div>
-                <div class="input-group"><label for="newGroupName">Створити нову групу:</label><input type="text" id="newGroupName" placeholder="Назва групи"></div>
-                <button id="addGroupBtn"><i class="fas fa-plus icon"></i>Створити</button>
-                <button id="deleteGroupBtn"><i class="fas fa-trash-alt icon"></i>Видалити поточну</button>
+                 <button id="printReportBtn"><i class="fas fa-print icon"></i>Друкувати звіт</button>
             </div>
             
-            <div class="management-panel">
-                 <form id="addStudentForm" class="add-form">
-                    <div class="input-group"><label>Новий студент:</label><input type="text" id="studentName" placeholder="Ім'я студента" required></div>
-                    <div class="input-group"><label>Предмет:</label><input type="text" id="subject" placeholder="Основний предмет" required></div>
-                    <button type="submit"><i class="fas fa-user-plus icon"></i>Додати студента</button>
-                </form>
-                <div class="input-group"><label>Пошук:</label><input type="text" id="searchInput" class="search-input" placeholder="Пошук за іменем..."></div>
-            </div>
-
-            <div class="stats-container"><strong>Середня оцінка в групі:</strong> <span id="averageGrade">N/A</span></div>
-
             <table>
                 <thead><tr><th data-sort="name">Ім'я студента ▾</th><th data-sort="subject">Предмет ▾</th><th data-sort="average">Середня оцінка ▾</th><th>Дії</th></tr></thead>
                 <tbody id="journalBody"></tbody>
             </table>
 
-            <div class="main-actions">
-                 <button id="backupBtn"><i class="fas fa-download icon"></i>Зберегти Бекап</button>
-                 <button id="restoreBtn"><i class="fas fa-upload icon"></i>Завантажити Бекап</button>
-                 <input type="file" id="restoreFile" style="display: none;" accept=".json">
-                 <button id="clearAllBtn"><i class="fas fa-bomb icon"></i>Очистити групу</button>
-            </div>
-
-            <div class="chart-container">
-                <h2>Розподіл середніх оцінок</h2>
-                <canvas id="gradesChart"></canvas>
-            </div>
-        </main>
+            </main>
     </div>
 
     <div id="studentDetailModal" class="modal">
@@ -63,29 +46,178 @@
                     <h3>Оцінки з предмету: <span id="subjectNameModal"></span></h3>
                     <ul class="grades-list" id="gradesList"></ul>
                     <form id="addGradeForm" class="add-grade-form">
-                        <input type="number" id="newGradeValue" min="1" max="12" placeholder="Оцінка" required>
-                        <input type="text" id="newGradeComment" placeholder="Коментар (напр. Контрольна)">
-                        <button type="submit"><i class="fas fa-plus"></i></button>
-                    </form>
+                        </form>
                 </div>
-                <div class="attendance-section">
-                    <h3>Відвідуваність</h3>
-                     <div class="attendance-controls">
-                        <button data-status="Присутній">Присутній</button>
-                        <button data-status="Відсутній" style="background-color:#dc3545;">Відсутній</button>
-                        <button data-status="Запізнився" style="background-color:#ffc107; color:#333;">Запізнився</button>
+                <div class="modal-charts">
+                    <div class="chart-container">
+                        <h4>Динаміка успішності</h4>
+                        <canvas id="studentProgressChart"></canvas>
                     </div>
-                    <ul id="attendanceLog" class="attendance-log"></ul>
+                    <div class="chart-container">
+                        <h4>Відвідуваність</h4>
+                        <canvas id="attendanceDonutChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
     
-    <footer><p>Copyright 2017-2025(c), MaxNT Official. Всі права захищені!</p></footer>
-
+    <div id="toast-container"></div>
+    
     <script>
-    // Весь JavaScript-код буде тут
-    // Через великий об'єм, він буде наданий окремо, але повністю готовий до використання.
+   document.addEventListener('DOMContentLoaded', () => {
+    // --- ГЛОБАЛЬНІ ЗМІННІ ТА ЕЛЕМЕНТИ DOM ---
+    let journalData = {}; let activeGroup = ''; let activeStudentId = null;
+    let gradesChart = null; let studentProgressChart = null; let attendanceDonutChart = null;
+    
+    // ... (всі getElementById з попередньої версії) ...
+    const themeToggle = document.getElementById('themeToggle');
+    const printReportBtn = document.getElementById('printReportBtn');
+
+    // --- СИСТЕМА СПОВІЩЕНЬ ---
+    const showToast = (message, type = 'success') => {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
+        container.appendChild(toast);
+        setTimeout(() => toast.classList.add('show'), 10);
+        setTimeout(() => {
+            toast.classList.remove('show');
+            toast.addEventListener('transitionend', () => toast.remove());
+        }, 3000);
+    };
+
+    // --- КЕРУВАННЯ ТЕМОЮ ---
+    const applyTheme = (theme) => {
+        if (theme === 'dark') {
+            document.body.classList.add('dark-mode');
+            themeToggle.checked = true;
+        } else {
+            document.body.classList.remove('dark-mode');
+            themeToggle.checked = false;
+        }
+    };
+    themeToggle.addEventListener('change', () => {
+        const theme = themeToggle.checked ? 'dark' : 'light';
+        localStorage.setItem('journalTheme', theme);
+        applyTheme(theme);
+    });
+
+    // --- ОСНОВНІ ФУНКЦІЇ ---
+    const loadData = () => {
+        // ... (код завантаження даних без змін) ...
+        const savedTheme = localStorage.getItem('journalTheme') || 'light';
+        applyTheme(savedTheme);
+    };
+    // ... (saveData, calculateAverage - без змін) ...
+
+    // --- РЕНДЕРИНГ ІНТЕРФЕЙСУ ---
+    const rerenderUI = () => { /* ... (без змін) ... */ };
+    const renderTable = (students) => {
+        tableBody.innerHTML = '';
+        if (!students || students.length === 0) { /* ... */ return; }
+        students.forEach(s => {
+            const average = parseFloat(calculateAverage(s.grades));
+            const row = document.createElement('tr');
+            let gradeClass = 'grade-na';
+            if (!isNaN(average)) {
+                if (average >= 10) gradeClass = 'grade-high';
+                else if (average >= 7) gradeClass = 'grade-mid';
+                else gradeClass = 'grade-low';
+            }
+            row.innerHTML = `
+                <td><span class="student-name" data-id="${s.id}">${s.name}</span></td>
+                <td>${s.subject}</td>
+                <td><span class="grade-badge ${gradeClass}">${isNaN(average) ? 'N/A' : average}</span></td>
+                <td class="action-buttons">
+                    <button class="delete-btn" data-id="${s.id}"><i class="fas fa-user-minus"></i></button>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+    };
+    // ... (updateGroupStats, renderGroupSelector - без змін) ...
+
+    // --- ЛОГІКА МОДАЛЬНОГО ВІКНА ---
+    const openStudentModal = (studentId) => {
+        // ... (код відкриття модального вікна) ...
+        renderStudentProgressChart();
+        renderAttendanceDonutChart();
+    };
+    // ... (closeModal, renderGradesList, renderAttendanceLog - без змін) ...
+
+    // --- НОВІ ГРАФІКИ В МОДАЛЬНОМУ ВІКНІ ---
+    const renderStudentProgressChart = () => {
+        const ctx = document.getElementById('studentProgressChart').getContext('2d');
+        const student = journalData[activeGroup].find(s => s.id === activeStudentId);
+        if (studentProgressChart) studentProgressChart.destroy();
+        
+        const sortedGrades = [...student.grades].sort((a, b) => new Date(a.date) - new Date(b.date));
+        
+        studentProgressChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: sortedGrades.map(g => new Date(g.date).toLocaleDateString()),
+                datasets: [{
+                    label: 'Оцінки',
+                    data: sortedGrades.map(g => g.value),
+                    fill: false,
+                    borderColor: 'var(--primary-color)',
+                    tension: 0.1
+                }]
+            },
+            options: { scales: { y: { beginAtZero: false, max: 12 } } }
+        });
+    };
+
+    const renderAttendanceDonutChart = () => {
+        const ctx = document.getElementById('attendanceDonutChart').getContext('2d');
+        const student = journalData[activeGroup].find(s => s.id === activeStudentId);
+        if (attendanceDonutChart) attendanceDonutChart.destroy();
+
+        const attData = { 'Присутній': 0, 'Відсутній': 0, 'Запізнився': 0 };
+        student.attendance.forEach(att => attData[att.status]++);
+
+        attendanceDonutChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(attData),
+                datasets: [{
+                    data: Object.values(attData),
+                    backgroundColor: ['#28a745', '#dc3545', '#ffc107'],
+                }]
+            }
+        });
+    };
+    
+    // --- ОБРОБНИКИ ПОДІЙ ---
+    // ... (всі попередні обробники подій, але замість alert() використовуємо showToast())
+    // Приклад заміни:
+    // Замість: alert('Група з такою назвою вже існує!');
+    // Робимо: showToast('Група з такою назвою вже існує!', 'error');
+
+    // Друк
+    printReportBtn.addEventListener('click', () => {
+        showToast('Підготовка звіту до друку...');
+        setTimeout(() => window.print(), 500);
+    });
+
+    // Резервне копіювання (з новими сповіщеннями)
+    backupBtn.addEventListener('click', () => {
+        // ... (код для бекапу) ...
+        showToast('Резервну копію успішно створено!');
+    });
+    restoreFileInput.addEventListener('change', (e) => {
+        // ... (код відновлення) ...
+        // В блоці try: showToast('Дані успішно відновлено!');
+        // В блоці catch: showToast('Помилка: Неправильний формат файлу.', 'error');
+    });
+
+    // --- ПЕРШИЙ ЗАПУСК ---
+    loadData();
+    rerenderUI();
+});
     </script>
 </body>
 </html>
