@@ -1,13 +1,9 @@
 /* Загальні стилі */
 body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f9;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f0f2f5;
     margin: 0;
     padding: 20px;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    min-height: 100vh;
 }
 
 /* Стилі для контейнера входу */
@@ -15,14 +11,14 @@ body {
     background-color: #fff;
     padding: 30px;
     border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    width: 300px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    width: 320px;
     text-align: center;
-    margin-top: 100px;
+    margin: 100px auto;
 }
 
 .login-container h2 {
-    margin-bottom: 20px;
+    margin-bottom: 25px;
     color: #333;
 }
 
@@ -35,6 +31,7 @@ label {
     display: block;
     margin-bottom: 5px;
     color: #555;
+    font-weight: 600;
 }
 
 input[type="text"],
@@ -43,22 +40,29 @@ input[type="number"] {
     width: 100%;
     padding: 10px;
     border: 1px solid #ccc;
-    border-radius: 4px;
+    border-radius: 5px;
     box-sizing: border-box;
+    transition: border-color 0.3s;
+}
+
+input:focus {
+    border-color: #28a745;
+    outline: none;
 }
 
 button {
     padding: 10px 15px;
-    background-color: #007BFF;
+    background-color: #28a745; /* Зелений */
     color: white;
     border: none;
-    border-radius: 4px;
+    border-radius: 5px;
     cursor: pointer;
     font-size: 16px;
+    transition: background-color 0.3s;
 }
 
 button:hover {
-    background-color: #0056b3;
+    background-color: #218838; /* Темно-зелений */
 }
 
 .error-message {
@@ -69,12 +73,13 @@ button:hover {
 
 /* Стилі для контейнера журналу */
 .journal-container {
-    width: 90%;
-    max-width: 1200px;
+    width: 95%;
+    max-width: 1400px;
     background-color: #fff;
-    padding: 25px;
+    padding: 30px;
     border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    margin: 0 auto;
 }
 
 header {
@@ -85,9 +90,10 @@ header {
 
 header h1 {
     margin: 0;
+    color: #333;
 }
 
-/* Нові стилі для елементів керування */
+/* Панель керування */
 .controls-container {
     display: flex;
     justify-content: space-between;
@@ -101,6 +107,7 @@ header h1 {
     display: flex;
     gap: 10px;
     align-items: center;
+    flex-wrap: wrap;
 }
 
 .add-form input {
@@ -116,20 +123,32 @@ header h1 {
     min-width: 250px;
 }
 
+/* Статистика */
+.stats-container {
+    background-color: #e8f5e9;
+    border-left: 5px solid #28a745;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    font-size: 18px;
+}
+
 /* Стилі таблиці */
 table {
     width: 100%;
     border-collapse: collapse;
+    margin-top: 20px;
 }
 
 th, td {
     padding: 12px 15px;
     border: 1px solid #ddd;
     text-align: left;
+    vertical-align: middle;
 }
 
 thead {
-    background-color: #007BFF;
+    background-color: #28a745; /* Зелений */
     color: white;
 }
 
@@ -139,19 +158,75 @@ th[data-sort] {
 }
 
 th[data-sort]:hover {
-    background-color: #0056b3;
+    background-color: #218838; /* Темно-зелений */
 }
 
 tbody tr:nth-child(even) {
-    background-color: #f2f2f2;
+    background-color: #f9f9f9;
 }
 
-.delete-btn {
-    background-color: #dc3545;
-    padding: 5px 10px;
-    font-size: 14px;
+tbody tr:hover {
+    background-color: #f1f1f1;
 }
 
-.delete-btn:hover {
-    background-color: #c82333;
+.grade-actions button {
+    font-size: 12px;
+    padding: 3px 8px;
+    margin-left: 5px;
+}
+
+.set-grade-btn { background-color: #17a2b8; }
+.set-grade-btn:hover { background-color: #138496; }
+
+.remove-grade-btn { background-color: #ffc107; color: #212529;}
+.remove-grade-btn:hover { background-color: #e0a800; }
+
+.action-buttons button { margin-right: 5px; }
+.edit-btn { background-color: #ffc107; color: #212529; }
+.edit-btn:hover { background-color: #e0a800; }
+
+.delete-btn { background-color: #dc3545; }
+.delete-btn:hover { background-color: #c82333; }
+
+#clearAllBtn { background-color: #6c757d; margin-top: 20px; }
+#clearAllBtn:hover { background-color: #5a6268; }
+
+/* Футер */
+footer {
+    text-align: center;
+    margin-top: 30px;
+    padding-top: 15px;
+    border-top: 1px solid #ddd;
+    color: #777;
+}
+
+/* Модальне вікно для редагування */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 25px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 500px;
+    border-radius: 8px;
+}
+
+.close-btn {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
 }
