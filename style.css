@@ -36,7 +36,8 @@ label {
 
 input[type="text"],
 input[type="password"],
-input[type="number"] {
+input[type="number"],
+select {
     width: 100%;
     padding: 10px;
     border: 1px solid #ccc;
@@ -45,7 +46,7 @@ input[type="number"] {
     transition: border-color 0.3s;
 }
 
-input:focus {
+input:focus, select:focus {
     border-color: #28a745;
     outline: none;
 }
@@ -91,6 +92,34 @@ header {
 header h1 {
     margin: 0;
     color: #333;
+}
+
+/* Панель керування групами */
+.group-management {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    border: 1px solid #dee2e6;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 15px;
+}
+
+.group-management .input-group {
+    flex-grow: 1;
+}
+
+.group-management button {
+    height: 40px; /* Вирівнюємо висоту кнопок */
+}
+
+#deleteGroupBtn {
+    background-color: #dc3545;
+}
+#deleteGroupBtn:hover {
+    background-color: #c82333;
 }
 
 /* Панель керування */
@@ -152,44 +181,42 @@ thead {
     color: white;
 }
 
-th[data-sort] {
-    cursor: pointer;
-    user-select: none;
-}
+th[data-sort] { cursor: pointer; user-select: none; }
+th[data-sort]:hover { background-color: #218838; }
 
-th[data-sort]:hover {
-    background-color: #218838; /* Темно-зелений */
-}
+tbody tr:nth-child(even) { background-color: #f9f9f9; }
+tbody tr:hover { background-color: #f1f1f1; }
 
-tbody tr:nth-child(even) {
-    background-color: #f9f9f9;
-}
-
-tbody tr:hover {
-    background-color: #f1f1f1;
-}
-
-.grade-actions button {
-    font-size: 12px;
-    padding: 3px 8px;
-    margin-left: 5px;
-}
-
+.grade-actions button { font-size: 12px; padding: 3px 8px; margin-left: 5px; }
 .set-grade-btn { background-color: #17a2b8; }
 .set-grade-btn:hover { background-color: #138496; }
-
 .remove-grade-btn { background-color: #ffc107; color: #212529;}
 .remove-grade-btn:hover { background-color: #e0a800; }
 
 .action-buttons button { margin-right: 5px; }
 .edit-btn { background-color: #ffc107; color: #212529; }
 .edit-btn:hover { background-color: #e0a800; }
-
 .delete-btn { background-color: #dc3545; }
 .delete-btn:hover { background-color: #c82333; }
 
-#clearAllBtn { background-color: #6c757d; margin-top: 20px; }
+/* Кнопки дій */
+.main-actions {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+}
+#exportBtn { background-color: #007bff; }
+#exportBtn:hover { background-color: #0069d9; }
+#clearAllBtn { background-color: #6c757d; }
 #clearAllBtn:hover { background-color: #5a6268; }
+
+/* Графік */
+.chart-container {
+    margin-top: 30px;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
 
 /* Футер */
 footer {
@@ -201,32 +228,6 @@ footer {
 }
 
 /* Модальне вікно для редагування */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.5);
-}
-
-.modal-content {
-    background-color: #fefefe;
-    margin: 15% auto;
-    padding: 25px;
-    border: 1px solid #888;
-    width: 80%;
-    max-width: 500px;
-    border-radius: 8px;
-}
-
-.close-btn {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-}
+.modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
+.modal-content { background-color: #fefefe; margin: 15% auto; padding: 25px; border: 1px solid #888; width: 80%; max-width: 500px; border-radius: 8px; }
+.close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
